@@ -1,9 +1,6 @@
 import com.intellij.codeInsight.highlighting.HighlightManager;
 import com.intellij.lang.java.JavaFindUsagesProvider;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.LangDataKeys;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.colors.EditorColors;
@@ -14,6 +11,7 @@ import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.*;
@@ -25,7 +23,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
-import java.util.Collection;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by pip on 17.12.2015.
@@ -35,7 +34,7 @@ public class findHTTPinLoop extends AnAction {
     @Override
     public void actionPerformed(AnActionEvent e) {
         final Project project = e.getProject();
-
+        VirtualFile[] virtualFiles = DataKeys.VIRTUAL_FILE_ARRAY.getData(e.getDataContext());
         final Document document = e.getData(PlatformDataKeys.EDITOR).getDocument();
         if (project == null) {
             return;
@@ -87,6 +86,12 @@ public class findHTTPinLoop extends AnAction {
                             highlightElement(document, expression);
                         }
                     }
+                    if (classOfExpression.getQualifiedName().equalsIgnoreCase("com.google.android.gms.ads.AdView")
+                            && nameOfMethod.equalsIgnoreCase("loadAd")){
+                        if (checkIfHasLoopParent(expression)){
+                            highlightElement(document, expression);
+                        }
+                    }
                 }
             };
             psiFile.accept(javaRecursiveElementVisitor);
@@ -119,8 +124,19 @@ public class findHTTPinLoop extends AnAction {
                 PsiType psiType = ((PsiLocalVariable) element).getType();
                 if (psiType instanceof PsiClassType){
                     String className = ((PsiClassType)psiType).resolve().getQualifiedName();
+                    PsiType[] implementsListTypes = ((PsiClassType)psiType).resolve().getImplementsListTypes();
+                    ArrayList<String> implementsNames = new ArrayList<String>();
+                    for (PsiType type : implementsListTypes){
+                        if (type instanceof PsiClassType){
+                            implementsNames.add(((PsiClassType) type).resolve().getQualifiedName());
+                        }
+                    }
+                    ((PsiClassType)((PsiClassType)psiType).resolve().getImplementsListTypes()[0]).resolve().getQualifiedName();
+                    ((PsiClassType)psiType).resolve().getImplementsList();
                     if (className.equalsIgnoreCase("java.util.TimerTask")
-                            || className.equalsIgnoreCase("android.os.AsyncTask")){
+                            || className.equalsIgnoreCase("android.os.AsyncTask")
+                            || className.equalsIgnoreCase("java.lang.Runnable")
+                            || implementsNames.contains("java.lang.Runnable")){
                         return true;
                     }
                 }

@@ -29,7 +29,7 @@ public class findGPSUsage extends AnAction {
                         final PsiClassType psiClassType = (PsiClassType) psiType;
                         final PsiClass psiClassOfField = psiClassType.resolve();
                         if (psiClassOfField.getQualifiedName().equalsIgnoreCase("android.location.LocationManager")){
-                            System.out.println("found yo shit");
+                            System.out.println("found gps usage");
                         }
 
                     }

@@ -6,30 +6,22 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.EditorColorsScheme;
-import com.intellij.openapi.editor.markup.EffectType;
 import com.intellij.openapi.editor.markup.HighlighterLayer;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.StatusBar;
-import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 /**
  * Created by pip on 17.12.2015.
  */
-public class findHTTPinLoop extends AnAction {
+public class FindHTTPinLoop extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent e) {
@@ -40,61 +32,62 @@ public class findHTTPinLoop extends AnAction {
             return;
         }
         PsiFile psiFile = e.getData(LangDataKeys.PSI_FILE);
-        if (psiFile != null) {
-            JavaRecursiveElementVisitor javaRecursiveElementVisitor = new JavaRecursiveElementVisitor() {
-                @Override
-                public void visitReferenceExpression(PsiReferenceExpression psiReferenceExpression) {
-                }
+        ArrayList<VirtualFile> allJavaFilesInProject = FileGatherer.getAllJavaFilesInProject(project);
+        JavaRecursiveElementVisitor javaRecursiveElementVisitor = new JavaRecursiveElementVisitor() {
+            @Override
+            public void visitReferenceExpression(PsiReferenceExpression psiReferenceExpression) {
+            }
 
-                @Override
-                public void visitAnnotation(PsiAnnotation annotation) {
-                    if (annotation.getNameReferenceElement().getText().equalsIgnoreCase("POST")) {
-                        PsiElement annotatedElement = annotation.getParent().getParent();
-                        if (annotatedElement instanceof PsiMethod) {
-                            if (visitSuspiciousElement(annotatedElement)){
-                                highlightElement(document, annotatedElement);
-                            }
+            @Override
+            public void visitAnnotation(PsiAnnotation annotation) {
+                if (annotation.getNameReferenceElement().getText().equalsIgnoreCase("POST")) {
+                    PsiElement annotatedElement = annotation.getParent().getParent();
+                    if (annotatedElement instanceof PsiMethod) {
+                        if (visitSuspiciousElement(annotatedElement)){
+                            highlightElement(document, annotatedElement);
                         }
                     }
                 }
+            }
 
-                @Override
-                public void visitMethodCallExpression(PsiMethodCallExpression expression){
-                    PsiClass classOfExpression = expression.resolveMethod().getContainingClass();
-                    String nameOfMethod = expression.resolveMethod().getName();
-                    if (classOfExpression.getQualifiedName().equalsIgnoreCase("java.net.URL")
-                            && nameOfMethod.equalsIgnoreCase("openConnection")){
-                        if (checkIfHasLoopParent(expression)){
-                            highlightElement(document, expression);
-                        }
-                    }
-                    if (classOfExpression.getQualifiedName().equalsIgnoreCase("java.net.URLConnection")
-                            && nameOfMethod.equalsIgnoreCase("connect")){
-                        if (checkIfHasLoopParent(expression)){
-                            highlightElement(document, expression);
-                        }
-                    }
-                    if (classOfExpression.getQualifiedName().equalsIgnoreCase("org.apache.http.client.HttpClient")
-                            && nameOfMethod.equalsIgnoreCase("execute")){
-                        if (checkIfHasLoopParent(expression)){
-                            highlightElement(document, expression);
-                        }
-                    }
-                    if (classOfExpression.getQualifiedName().equalsIgnoreCase("java.net.Socket")
-                            && nameOfMethod.equalsIgnoreCase("getOutputStream")){
-                        if (checkIfHasLoopParent(expression)){
-                            highlightElement(document, expression);
-                        }
-                    }
-                    if (classOfExpression.getQualifiedName().equalsIgnoreCase("com.google.android.gms.ads.AdView")
-                            && nameOfMethod.equalsIgnoreCase("loadAd")){
-                        if (checkIfHasLoopParent(expression)){
-                            highlightElement(document, expression);
-                        }
+            @Override
+            public void visitMethodCallExpression(PsiMethodCallExpression expression){
+                PsiClass classOfExpression = expression.resolveMethod().getContainingClass();
+                String nameOfMethod = expression.resolveMethod().getName();
+                if (classOfExpression.getQualifiedName().equalsIgnoreCase("java.net.URL")
+                        && nameOfMethod.equalsIgnoreCase("openConnection")){
+                    if (checkIfHasLoopParent(expression)){
+                        highlightElement(document, expression);
                     }
                 }
-            };
-            psiFile.accept(javaRecursiveElementVisitor);
+                if (classOfExpression.getQualifiedName().equalsIgnoreCase("java.net.URLConnection")
+                        && nameOfMethod.equalsIgnoreCase("connect")){
+                    if (checkIfHasLoopParent(expression)){
+                        highlightElement(document, expression);
+                    }
+                }
+                if (classOfExpression.getQualifiedName().equalsIgnoreCase("org.apache.http.client.HttpClient")
+                        && nameOfMethod.equalsIgnoreCase("execute")){
+                    if (checkIfHasLoopParent(expression)){
+                        highlightElement(document, expression);
+                    }
+                }
+                if (classOfExpression.getQualifiedName().equalsIgnoreCase("java.net.Socket")
+                        && nameOfMethod.equalsIgnoreCase("getOutputStream")){
+                    if (checkIfHasLoopParent(expression)){
+                        highlightElement(document, expression);
+                    }
+                }
+                if (classOfExpression.getQualifiedName().equalsIgnoreCase("com.google.android.gms.ads.AdView")
+                        && nameOfMethod.equalsIgnoreCase("loadAd")){
+                    if (checkIfHasLoopParent(expression)){
+                        highlightElement(document, expression);
+                    }
+                }
+            }
+        };
+        for (VirtualFile file : allJavaFilesInProject){
+            PsiManager.getInstance(project).findFile(file).accept(javaRecursiveElementVisitor);
         }
     }
 

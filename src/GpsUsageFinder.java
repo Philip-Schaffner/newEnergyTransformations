@@ -7,7 +7,7 @@ import com.intellij.psi.*;
 /**
  * Created by pip on 17.12.2015.
  */
-public class FindGPSUsage extends AnAction {
+public class GpsUsageFinder extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent e) {

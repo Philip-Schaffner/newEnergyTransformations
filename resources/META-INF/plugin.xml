@@ -33,12 +33,12 @@
     <group id="energyRefactorings" text="Energy Refactorings" description="All available energy refactorings" popup="true">
       <add-to-group group-id="ToolsMenu"/>
     </group>
-    <action id="FindGPSUsage" class="FindGPSUsage" text="Find_GPS_Usage" description="Finds usages of GPS">
+    <action id="GpsUsageFinder" class="GpsUsageFinder" text="Find_GPS_Usage" description="Finds usages of GPS">
       <add-to-group group-id="energyRefactorings" anchor="first"/>
     </action>
-    <action id="FindHTTPinLoop" class="FindHTTPinLoop" text="Find_HTTP_calls_in_loops"
+    <action id="HttpInLoopFinder" class="HttpInLoopFinder" text="Find_HTTP_calls_in_loops"
             description="Finds all HTTP calls which are located in loops">
-      <add-to-group group-id="energyRefactorings" relative-to-action="FindGPSUsage" anchor="after"/>
+      <add-to-group group-id="energyRefactorings" relative-to-action="GpsUsageFinder" anchor="after"/>
     </action>
   </actions>
 

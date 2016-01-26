@@ -102,4 +102,8 @@ public class HttpInLoopRefactoring {
             }
         });
     }
+
+    public void refactor(PsiElement element) {
+        createFile();
+    }
 }

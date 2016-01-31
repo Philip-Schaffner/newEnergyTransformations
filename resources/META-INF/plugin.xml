@@ -30,15 +30,8 @@
 
   <actions>
     <!-- Add your actions here -->
-    <group id="energyRefactorings" text="Energy Refactorings" description="All available energy refactorings" popup="true">
-      <add-to-group group-id="ToolsMenu"/>
-    </group>
-    <action id="GpsUsageFinder" class="GpsUsageFinder" text="Find_GPS_Usage" description="Finds usages of GPS">
-      <add-to-group group-id="energyRefactorings" anchor="first"/>
-    </action>
-    <action id="HttpInLoopFinder" class="HttpInLoopFinder" text="Find_HTTP_calls_in_loops"
-            description="Finds all HTTP calls which are located in loops">
-      <add-to-group group-id="energyRefactorings" relative-to-action="GpsUsageFinder" anchor="after"/>
+    <action id="energyRefactorings" class="MainController" text="Run energy refactorings" description="All available energy refactorings">
+      <add-to-group group-id="ToolsMenu" anchor="first"/>
     </action>
   </actions>
 

@@ -2,8 +2,10 @@ import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 
 import java.util.ArrayList;
 
@@ -12,17 +14,29 @@ import java.util.ArrayList;
  */
 public class MainController extends AnAction{
 
-        @Override
-        public void actionPerformed(AnActionEvent e) {
-            final Project project = e.getProject();
-            VirtualFile[] virtualFiles = DataKeys.VIRTUAL_FILE_ARRAY.getData(e.getDataContext());
-            final Document document = e.getData(PlatformDataKeys.EDITOR).getDocument();
-            if (project == null) {
-                return;
-            }
-            PsiFile psiFile = e.getData(LangDataKeys.PSI_FILE);
-            ArrayList<VirtualFile> allJavaFilesInProject = FileGatherer.getAllJavaFilesInProject(project);
-            ArrayList<PsiElement> foundElements = new ArrayList<PsiElement>();
-            ArrayList<PsiElement> elementsToChange = new ArrayList<PsiElement>();
+    public ArrayList<Refactoring> allRefactorings;
+
+    public MainController(){
+        allRefactorings = new ArrayList<Refactoring>();
+        allRefactorings.add(new HttpInLoop());
+    }
+
+    @Override
+    public void actionPerformed(AnActionEvent e) {
+        final Project project = e.getProject();
+        if (project == null) {
+            return;
         }
+        ArrayList<VirtualFile> allJavaFilesInProject = FileGatherer.getAllJavaFilesInProject(project);
+        for (Refactoring refactoring : allRefactorings){
+            JavaRecursiveElementVisitor detector = refactoring.getDetector();
+            for (VirtualFile file : allJavaFilesInProject){
+                PsiManager.getInstance(project).findFile(file).accept(detector);
+            }
+            for (PsiElement element : refactoring.elementsToRefactor){
+                refactoring.refactor(element);
+            }
+
+        }
+    }
 }

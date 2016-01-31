@@ -1,5 +1,7 @@
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiElement;
+import java.util.HashSet;
 
 import java.util.ArrayList;
 
@@ -8,24 +10,23 @@ import java.util.ArrayList;
  */
 public abstract class Refactoring {
 
-    public ArrayList<PsiElement> foundElements;
-    public ArrayList<PsiElement> elementsToRefactor;
+    public HashSet<PsiElement> foundElements;
+    public HashSet<PsiElement> elementsToRefactor;
+
+    public HashSet<PsiElement> getElementsToRefactor() {
+        return elementsToRefactor;
+    }
+
+    public HashSet<PsiElement> getFoundElements() {
+        return foundElements;
+    }
 
     public Refactoring(){
-        foundElements = new ArrayList<PsiElement>();
-        elementsToRefactor = new ArrayList<PsiElement>();
+        foundElements = new HashSet<PsiElement>();
+        elementsToRefactor = new HashSet<PsiElement>();
     }
 
-    public JavaRecursiveElementVisitor getDetector(){
-        return new JavaRecursiveElementVisitor() {
-            @Override
-            public void visitElement(PsiElement element) {
-                super.visitElement(element);
-            }
-        };
-    }
-    public void refactor(PsiElement element){
-        System.out.println(element);
-    };
+    public abstract JavaRecursiveElementVisitor getDetector();
+    public abstract void refactor(PsiElement element);
 
 }

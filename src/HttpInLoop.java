@@ -1,10 +1,41 @@
+import com.intellij.codeInsight.highlighting.HighlightManager;
 import com.intellij.lang.java.JavaFindUsagesProvider;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.colors.EditorColors;
+import com.intellij.openapi.editor.colors.EditorColorsManager;
+import com.intellij.openapi.editor.colors.EditorColorsScheme;
+import com.intellij.openapi.editor.markup.HighlighterLayer;
+import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.openapi.editor.richcopy.model.OutputInfoSerializer;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PsiImportStatementImpl;
+import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.util.Query;
+import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Scanner;
 
 /**
  * Created by pip on 26.01.2016.
@@ -24,7 +55,7 @@ public class HttpInLoop extends Refactoring {
                 if (annotation.getNameReferenceElement().getText().equalsIgnoreCase("POST")) {
                     PsiElement annotatedElement = annotation.getParent().getParent();
                     if (annotatedElement instanceof PsiMethod) {
-                        if (visitSuspiciousElement(annotatedElement)){
+                        if (checkIfHasLoopParent(annotatedElement)){
                             foundElements.add(annotatedElement);
                         }
                     }
@@ -56,28 +87,85 @@ public class HttpInLoop extends Refactoring {
                 }
             }
         };
+
     }
+
+
 
     @Override
     public void refactor(PsiElement element) {
-
-    }
-
-    private boolean visitSuspiciousElement(PsiElement annotatedElement) {
-        if (annotatedElement instanceof PsiClass && ((PsiClass) annotatedElement).getQualifiedName().equalsIgnoreCase("java.util.TimerTask")){
-            return true;
-        }
-        Collection<PsiReference> usages = findUsages(annotatedElement);
-        for (PsiReference ref : usages){
-            if (ref instanceof PsiReferenceExpression) {
-                PsiElement[] children = ((PsiReferenceExpression) ref).getChildren();
-                for (PsiElement child : children) {
-                    return checkIfHasLoopParent(child);
+        DependencyCreator dependencyCreator = new DependencyCreator();
+        String[] filesToCreate = new String[]{"SleepTimeCalculator.java"};
+        dependencyCreator.createPackageAndFiles(element,filesToCreate);
+        if (element instanceof PsiLocalVariable) {
+            PsiType psiType = ((PsiLocalVariable) element).getType();
+            if (psiType instanceof PsiClassType) {
+                String className = ((PsiClassType) psiType).resolve().getQualifiedName();
+                Collection<PsiReference> usages = Utilities.findUsages(element);
+                switch (className) {
+                    case "java.util.TimerTask":
+                        for (PsiReference usage : usages) {
+                            PsiElement usageElement = usage.getElement();
+                            while (!(usageElement == null
+                                    || (usageElement instanceof PsiMethodCallExpression))) {
+                                usageElement = usageElement.getParent();
+                            }
+                            replaceTimer(usageElement);
+                            dependencyCreator.insertImportStatement(usageElement, "SleepTimeCalculator", "energyRefactorings");
+                        }
+                        break;
+                    case "android.os.AsyncTask":
+                        for (PsiReference usage : usages) {
+                            PsiElement usageElement = usage.getElement();
+                            while (!(usageElement == null
+                                    || (usageElement instanceof PsiMethodCallExpression))) {
+                                usageElement = usageElement.getParent();
+                            }
+                            if (usageElement instanceof PsiMethodCallExpression
+                                    && usageElement.getText().contains("schedule")) {
+                                PsiLiteralExpression timer = (PsiLiteralExpression) Utilities.findInChildren(usageElement, PsiLiteralExpressionImpl.class);
+                                PsiElementFactory elementFactory = PsiElementFactory.SERVICE.getInstance(usageElement.getProject());
+                                PsiElement newTimer = elementFactory.createExpressionFromText("SleepTimeCalculator.getSleepTimer()", usageElement);
+                                PsiElement importStatement = elementFactory.createImportStatement(elementFactory.createClass("SleepTimeCalculator"));
+                                PsiJavaFile timerFile = (PsiJavaFile) timer.getContainingFile();
+                                PsiImportStatementBase[] importList = timerFile.getImportList().getAllImportStatements();
+                                PsiImportStatementBase lastImport = importList[importList.length - 1];
+                                WriteCommandAction.runWriteCommandAction(usageElement.getProject(), new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        timer.replace(newTimer);
+                                        timerFile.addAfter(lastImport, importStatement);
+                                    }
+                                });
+                            }
+                        }
+                        break;
                 }
             }
         }
-        return false;
     }
+
+    private void replaceTimer(PsiElement usageElement) {
+        if (usageElement instanceof PsiMethodCallExpression
+                && usageElement.getText().contains("schedule")) {
+            PsiExpression[] arguments = ((PsiMethodCallExpression) usageElement).getArgumentList().getExpressions();
+            PsiExpression timer = arguments[1];
+            PsiElementFactory elementFactory = PsiElementFactory.SERVICE.getInstance(usageElement.getProject());
+            PsiJavaFile timerFile = (PsiJavaFile) timer.getContainingFile();
+            if (!timer.getText().contains("getSleepTimer")) {
+                PsiElement newTimer = elementFactory.createExpressionFromText(timer.getText() + "*SleepTimeCalculator.getSleepTimer()", usageElement);
+                PsiComment comment = elementFactory.createCommentFromText("//refactored by EnergyRefactorings ", null);
+                WriteCommandAction.runWriteCommandAction(usageElement.getProject(), new Runnable() {
+                    @Override
+                    public void run() {
+                        PsiElement anchor = timer.replace(newTimer);
+                        timerFile.addBefore(comment, anchor);
+                    }
+                });
+            }
+        }
+    }
+
 
     private boolean checkIfHasLoopParent(PsiElement element){
         while (element.getParent() != null) {
@@ -112,11 +200,19 @@ public class HttpInLoop extends Refactoring {
         return false;
     }
 
-    private Collection<PsiReference> findUsages(PsiElement element) {
-        JavaFindUsagesProvider usagesProvider = new JavaFindUsagesProvider();
-        usagesProvider.canFindUsagesFor(element);
-        Query<PsiReference> query = ReferencesSearch.search(element);
-        Collection<PsiReference> result = query.findAll();
-        return result;
+    private boolean visitSuspiciousElement(PsiElement annotatedElement) {
+        if (annotatedElement instanceof PsiClass && ((PsiClass) annotatedElement).getQualifiedName().equalsIgnoreCase("java.util.TimerTask")){
+            return true;
+        }
+        Collection<PsiReference> usages = Utilities.findUsages(annotatedElement);
+        for (PsiReference ref : usages){
+            if (ref instanceof PsiReferenceExpression) {
+                PsiElement[] children = ((PsiReferenceExpression) ref).getChildren();
+                for (PsiElement child : children) {
+                    return checkIfHasLoopParent(child);
+                }
+            }
+        }
+        return false;
     }
 }

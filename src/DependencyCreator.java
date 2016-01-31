@@ -5,69 +5,42 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.source.PsiImportStatementImpl;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Scanner;
+
 /**
- * Created by pip on 12.01.2016.
+ * Created by pip on 31.01.2016.
  */
-public class HttpInLoopRefactoring {
-
-    Project project;
-    VirtualFile file;
-
-    private String classText =
-            " * Created by pip on 12.01.2016.\n" +
-            " */\n" +
-            "public class SleepTimeCalculator {\n" +
-            "\n" +
-            "    public static Application getApplicationUsingReflection() throws Exception {\n" +
-            "        return (Application) Class.forName(\"android.app.ActivityThread\")\n" +
-            "                .getMethod(\"currentApplication\").invoke(null, (Object[]) null);\n" +
-            "    }\n" +
-            "\n" +
-            "    public float getSleepTimer(){\n" +
-            "        try{\n" +
-            "            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);\n" +
-            "            Intent batteryStatus = getApplicationUsingReflection().registerReceiver(null, ifilter);\n" +
-            "            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);\n" +
-            "            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);\n" +
-            "            float batteryPct = level / (float)scale;\n" +
-            "            return batteryPct;\n" +
-            "        } catch (Exception e){\n" +
-            "            System.out.println(e);\n" +
-            "            return 100;\n" +
-            "        }\n" +
-            "    }\n" +
-            "}\n";
-
-    public HttpInLoopRefactoring(Project project, VirtualFile file){
-        this.file = file;
-        this.project = project;
-    }
-
-//    public boolean createDependencies(){
-//        final PsiDirectory[] createdNameTokensPackageDirectories = createdNameTokensPackage.getDirectories();
-//        final PsiFile element = PsiFileFactory.getInstance(this.project).createFileFromText("SleepTimeCalculator", JavaFileType.INSTANCE,"../CodeToImport/SleepTimeCalculator.java");
-//        ApplicationManager.getApplication().runWriteAction(new Runnable() {
-//            public void run() {
-//                PsiElement createdNameTokensClass = createdNameTokensPackageDirectories[0].add(element);
-//                PsiJavaFile javaFile = (PsiJavaFile) createdNameTokensClass;
-//                PsiClass[] clazzes = javaFile.getClasses();
-//            }
-//        });
-//        return false;
-//    }
-
-    public void createFile(){
-
+public class DependencyCreator {
+    public void createPackageAndFiles(PsiElement element, String[] filesToCreate){
+        VirtualFile fileOfElement = element.getContainingFile().getVirtualFile();
+        Project project = element.getProject();
         WriteCommandAction.runWriteCommandAction(project, new Runnable() {
             @Override
             public void run() {
                 PsiFile androidManifest;
                 int realFileFoundAt = -1;
                 int index = 0;
-                Module module = ModuleUtil.findModuleForFile(file, project);
+                StringBuilder classText = new StringBuilder("");
+                File resourceFile = new File(getClass().getClassLoader().getResource(filesToCreate[0]).getFile());
+                try (Scanner scanner = new Scanner(resourceFile)) {
+
+                    while (scanner.hasNextLine()) {
+                        String line = scanner.nextLine();
+                        classText.append(line).append("\n");
+                    }
+
+                    scanner.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Module module = ModuleUtil.findModuleForFile(fileOfElement, project);
                 PsiManager psiManager = PsiManager.getInstance(project);
                 PsiFile moduleFile = psiManager.findFile(LocalFileSystem.getInstance().findFileByPath(module.getModuleFilePath()));
                 PsiDirectory moduleDir = (PsiDirectory) moduleFile.getParent();
@@ -94,7 +67,7 @@ public class HttpInLoopRefactoring {
                             newClassFile.add(factory.createImportStatement(facade.findClass("android.content.Intent", globalSearchScope)));
                             newClassFile.add(factory.createImportStatement(facade.findClass("android.content.IntentFilter", globalSearchScope)));
                             newClassFile.add(factory.createImportStatement(facade.findClass("android.os.BatteryManager", globalSearchScope)));
-                            PsiClass nameTokensClass = factory.createClassFromText(classText, null).getInnerClasses()[0];
+                            PsiClass nameTokensClass = factory.createClassFromText(classText.toString(), null).getInnerClasses()[0];
                             newClassFile.add(nameTokensClass);
                         }
                     }
@@ -103,7 +76,24 @@ public class HttpInLoopRefactoring {
         });
     }
 
-    public void refactor(PsiElement element) {
-        createFile();
+    public void insertImportStatement(PsiElement usageElement, String className, String packageName) {
+        String importText = packageName + "." + className;
+        PsiJavaFile fileOfElement = (PsiJavaFile) usageElement.getContainingFile();
+        PsiElementFactory elementFactory = PsiElementFactory.SERVICE.getInstance(usageElement.getProject());
+        PsiImportList importList = fileOfElement.getImportList();
+        PsiImportStatementBase[] importStatements = importList.getAllImportStatements();
+        if (!Utilities.checkIfImportExists(importStatements, importText)){
+            PsiClass classToImport = elementFactory.createClass(className);
+            classToImport.add(elementFactory.createPackageStatement(packageName));
+            PsiElement importStatement = elementFactory.createImportStatement(classToImport);
+            ((PsiImportStatementImpl) importStatement).getImportReference().replace(elementFactory.createFQClassNameReferenceElement(importText,GlobalSearchScope.allScope(usageElement.getProject())));
+            WriteCommandAction.runWriteCommandAction(usageElement.getProject(),new Runnable() {
+                @Override
+                public void run() {
+                    importList.add(importStatement);
+                }
+            });
+        }
+
     }
 }

@@ -172,9 +172,11 @@ public class HttpInLoop extends Refactoring {
             if (element instanceof PsiWhileStatement) {
                 elementsToRefactor.add(element);
                 return true;
-            } else if (element instanceof PsiMethod && visitSuspiciousElement(element)) {
-                elementsToRefactor.add(element);
-                return true;
+            } else if (element instanceof PsiMethod){
+                if (visitAllUsages(element)) {
+//                elementsToRefactor.add(element);
+                    return true;
+                }
             } else if (element instanceof PsiLocalVariable){
                 PsiType psiType = ((PsiLocalVariable) element).getType();
                 if (psiType instanceof PsiClassType){
@@ -200,11 +202,8 @@ public class HttpInLoop extends Refactoring {
         return false;
     }
 
-    private boolean visitSuspiciousElement(PsiElement annotatedElement) {
-        if (annotatedElement instanceof PsiClass && ((PsiClass) annotatedElement).getQualifiedName().equalsIgnoreCase("java.util.TimerTask")){
-            return true;
-        }
-        Collection<PsiReference> usages = Utilities.findUsages(annotatedElement);
+    private boolean visitAllUsages(PsiElement element) {
+        Collection<PsiReference> usages = Utilities.findUsages(element);
         for (PsiReference ref : usages){
             if (ref instanceof PsiReferenceExpression) {
                 PsiElement[] children = ((PsiReferenceExpression) ref).getChildren();

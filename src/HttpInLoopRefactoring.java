@@ -1,48 +1,16 @@
-import com.intellij.codeInsight.highlighting.HighlightManager;
-import com.intellij.lang.java.JavaFindUsagesProvider;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.colors.EditorColors;
-import com.intellij.openapi.editor.colors.EditorColorsManager;
-import com.intellij.openapi.editor.colors.EditorColorsScheme;
-import com.intellij.openapi.editor.markup.HighlighterLayer;
-import com.intellij.openapi.editor.markup.TextAttributes;
-import com.intellij.openapi.editor.richcopy.model.OutputInfoSerializer;
-import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.psi.impl.source.PsiImportStatementImpl;
 import com.intellij.psi.impl.source.tree.java.PsiLiteralExpressionImpl;
-import com.intellij.psi.search.FilenameIndex;
-import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.searches.ReferencesSearch;
-import com.intellij.util.Query;
-import org.apache.commons.lang.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Scanner;
 
 /**
  * Created by pip on 26.01.2016.
  */
-public class HttpInLoop extends Refactoring {
+public class HttpInLoopRefactoring extends Refactoring {
 
-    public HttpInLoop(){
+    public HttpInLoopRefactoring(){
         super();
     }
 
@@ -97,6 +65,18 @@ public class HttpInLoop extends Refactoring {
         DependencyCreator dependencyCreator = new DependencyCreator();
         String[] filesToCreate = new String[]{"SleepTimeCalculator.java"};
         dependencyCreator.createPackageAndFiles(element,filesToCreate);
+        if(element instanceof PsiMethodCallExpression){
+            dependencyCreator.insertImportStatement(element, "SleepTimeCalculator", "energyRefactorings");
+            surroundWithCheck(element);
+        }
+        else if(element instanceof PsiMethod){
+            Collection<PsiReference> usages = Utilities.findUsages(element);
+            for (PsiReference ref : usages){
+                if (ref instanceof PsiReferenceExpression) {
+                    refactor(((PsiReferenceExpression) ref).getParent());
+                }
+            }
+        }
         if (element instanceof PsiLocalVariable) {
             PsiType psiType = ((PsiLocalVariable) element).getType();
             if (psiType instanceof PsiClassType) {
@@ -145,6 +125,25 @@ public class HttpInLoop extends Refactoring {
         }
     }
 
+    private void surroundWithCheck(PsiElement element) {
+        PsiElementFactory elementFactory = PsiElementFactory.SERVICE.getInstance(element.getProject());
+        String conditionText = "SleepTimeCalculator.getInstance().canIRunAgain(" + element.hashCode() + ")";
+        String statementText = "if (condition) {methodcall}";
+        String statementText2 = ";";
+        PsiElement statementElement = elementFactory.createStatementFromText(statementText, null);
+        PsiElement statementElement2 = elementFactory.createStatementFromText(statementText2, null);
+        PsiElement conditionElement = elementFactory.createExpressionFromText(conditionText,element);
+        PsiElement originalCall = elementFactory.createExpressionFromText(element.getText(),element);
+        statementElement.getChildren()[3].replace(conditionElement);
+        statementElement.getChildren()[6].getChildren()[0].getChildren()[1].replace(element.getParent());
+        WriteCommandAction.runWriteCommandAction(element.getProject(), new Runnable() {
+            @Override
+            public void run() {
+                element.getParent().replace(statementElement);
+            }
+        });
+    }
+
     private void replaceTimer(PsiElement usageElement) {
         if (usageElement instanceof PsiMethodCallExpression
                 && usageElement.getText().contains("schedule")) {
@@ -174,7 +173,6 @@ public class HttpInLoop extends Refactoring {
                 return true;
             } else if (element instanceof PsiMethod){
                 if (visitAllUsages(element)) {
-//                elementsToRefactor.add(element);
                     return true;
                 }
             } else if (element instanceof PsiLocalVariable){

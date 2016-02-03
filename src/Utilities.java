@@ -94,4 +94,18 @@ public class Utilities {
     public static ArrayList<PsiElement> getArguments(PsiExpressionList expressionList){
         return new ArrayList<>();
     }
+
+    public static boolean checkIfHasSupertype(PsiType typetoCheck, String typeToFind){
+        if (typetoCheck.getPresentableText().equalsIgnoreCase(typeToFind)){
+            return true;
+        } else {
+            PsiType[] supertypes = typetoCheck.getSuperTypes();
+            for (PsiType type : supertypes) {
+                if (type.getPresentableText().equalsIgnoreCase(typeToFind)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

@@ -1,10 +1,8 @@
 import com.intellij.openapi.actionSystem.*;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 
 import java.util.ArrayList;
@@ -18,7 +16,8 @@ public class MainController extends AnAction{
 
     public MainController(){
         allRefactorings = new ArrayList<Refactoring>();
-        allRefactorings.add(new HttpInLoop());
+        //allRefactorings.add(new HttpInLoopRefactoring());
+        allRefactorings.add(new GpsUsageRefactoring());
     }
 
     @Override
@@ -33,7 +32,7 @@ public class MainController extends AnAction{
             for (VirtualFile file : allJavaFilesInProject){
                 PsiManager.getInstance(project).findFile(file).accept(detector);
             }
-            for (PsiElement element : refactoring.elementsToRefactor){
+            for (PsiElement element : refactoring.foundElements){
                 refactoring.refactor(element);
             }
 

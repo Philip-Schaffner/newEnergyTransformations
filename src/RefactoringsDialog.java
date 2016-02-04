@@ -97,6 +97,7 @@ public class RefactoringsDialog {
             }
         });
 
+        //Number of elements the ELementVisitor searched
         JLabel elementsScanned = new JBLabel("Number of elements scanned: " + Integer.toString(refactoring.getNoOfElementsScanned()));
 
         controlPanel.setLayout(new BorderLayout());

@@ -12,6 +12,7 @@ public class GpsUsageRefactoring extends Refactoring {
 
     public GpsUsageRefactoring(){
         super();
+        this.name = "Usage of GPS";
     }
 
     public JavaRecursiveElementVisitor getDetector(){

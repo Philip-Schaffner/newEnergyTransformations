@@ -16,13 +16,13 @@ public class MainController extends AnAction{
     private boolean MAKE_CHANGES = true;
 
     public MainController(){
-        allRefactorings = new ArrayList<Refactoring>();
-        //allRefactorings.add(new HttpInLoopRefactoring());
-        allRefactorings.add(new GpsUsageRefactoring());
     }
 
     @Override
     public void actionPerformed(AnActionEvent e) {
+        allRefactorings = new ArrayList<Refactoring>();
+        allRefactorings.add(new HttpInLoopRefactoring());
+        allRefactorings.add(new GpsUsageRefactoring());
         final Project project = e.getProject();
         if (project == null) {
             return;

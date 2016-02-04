@@ -12,6 +12,7 @@ public class HttpInLoopRefactoring extends Refactoring {
 
     public HttpInLoopRefactoring(){
         super();
+        this.name = "HTTP calls inside a loop";
     }
 
     @Override

@@ -34,7 +34,7 @@ public class RefactoringsDialog {
     public RefactoringsDialog(Refactoring refactoring, MainController callbackController){
         this.callbackController = callbackController;
         this.refactoring = refactoring;
-        frame = new JFrame();
+        frame = new JFrame(refactoring.name);
         controlPanel = new JPanel();
         buttonPanel = new JPanel();
     }
@@ -110,8 +110,10 @@ public class RefactoringsDialog {
         buttonPanel.add(cancelButton, BorderLayout.WEST);
         buttonPanel.add(okButton, BorderLayout.EAST);
         buttonPanel.add(elementsScanned, BorderLayout.PAGE_END);
-        frame.pack();
-        frame.setVisible(true);
+        if (list.getItemsCount() > 0) {
+            frame.pack();
+            frame.setVisible(true);
+        }
     }
 
     private ArrayList<String> getClassNames() {

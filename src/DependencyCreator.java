@@ -11,6 +11,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Scanner;
 
 /**
@@ -95,8 +96,9 @@ public class DependencyCreator {
 
     private String getClassText(String filename){
         StringBuilder classText = new StringBuilder("");
-        File resourceFile = new File(getClass().getClassLoader().getResource(filename).getFile());
-        try (Scanner scanner = new Scanner(resourceFile)) {
+        try {
+            URL resourceFileURL = getClass().getClassLoader().getResource(filename);
+            Scanner scanner = new Scanner(resourceFileURL.openStream());
 
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();

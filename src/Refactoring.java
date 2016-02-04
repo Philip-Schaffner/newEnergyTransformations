@@ -13,6 +13,8 @@ public abstract class Refactoring {
     protected HashSet<PsiElement> foundElements;
     protected HashSet<PsiElement> elementsToRefactor;
 
+    protected String name;
+
     protected int noOfElementsScanned;
 
     public HashSet<PsiElement> getElementsToRefactor() {

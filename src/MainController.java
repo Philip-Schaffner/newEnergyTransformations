@@ -13,6 +13,7 @@ import java.util.ArrayList;
 public class MainController extends AnAction{
 
     public ArrayList<Refactoring> allRefactorings;
+    private boolean MAKE_CHANGES = true;
 
     public MainController(){
         allRefactorings = new ArrayList<Refactoring>();
@@ -32,10 +33,18 @@ public class MainController extends AnAction{
             for (VirtualFile file : allJavaFilesInProject){
                 PsiManager.getInstance(project).findFile(file).accept(detector);
             }
-            for (PsiElement element : refactoring.foundElements){
+            RefactoringsDialog dialog = new RefactoringsDialog(refactoring,this);
+            dialog.showDialog();
+        }
+    }
+
+    public void performRefactorings(Refactoring refactoring, boolean[] selecteElements){
+        int index = 0;
+        for (PsiElement element : refactoring.foundElements){
+            if (selecteElements[index] &&  MAKE_CHANGES && !refactoring.isAlreadyRefactored(element)) {
                 refactoring.refactor(element);
             }
-
+            index++;
         }
     }
 }

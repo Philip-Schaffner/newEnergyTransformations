@@ -108,4 +108,24 @@ public class Utilities {
         }
         return false;
     }
+
+    public static Object findMethodReferenceInChildren(PsiElement element, String className, String methodName) {
+        LinkedList<PsiElement> queue = new LinkedList<PsiElement>();
+        queue.add(element);
+        while (!queue.isEmpty()){
+            PsiElement child = queue.remove();
+            if (child instanceof PsiMethodCallExpression) {
+                PsiClass classOfExpression = ((PsiMethodCallExpression)child).resolveMethod().getContainingClass();
+                String nameOfMethod = ((PsiMethodCallExpression)child).resolveMethod().getName();
+                if ((classOfExpression.getQualifiedName().equalsIgnoreCase(className)
+                        && nameOfMethod.equalsIgnoreCase(methodName))){
+                    return child;
+                }
+            }
+            for (PsiElement n : child.getChildren()) {
+                queue.add(n);
+            }
+        }
+        return null;
+    }
 }

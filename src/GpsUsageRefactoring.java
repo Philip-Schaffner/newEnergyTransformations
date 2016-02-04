@@ -29,21 +29,33 @@ public class GpsUsageRefactoring extends Refactoring {
 //            }
 
             public void visitMethodCallExpression(PsiMethodCallExpression expression) {
+                noOfElementsScanned++;
                 try {
                     PsiClass classOfExpression = expression.resolveMethod().getContainingClass();
-                    String nameOfMethod = expression.resolveMethod().getName();
-                    if ((classOfExpression.getQualifiedName().equalsIgnoreCase("android.location.LocationManager")
-                            && nameOfMethod.equalsIgnoreCase("requestLocationUpdates"))) {
+                    if (!(classOfExpression instanceof PsiAnonymousClass)){
+                        String qualifiedClassName = classOfExpression.getQualifiedName();
+                        String nameOfMethod = expression.resolveMethod().getName();
+                        if ((qualifiedClassName.equalsIgnoreCase("android.location.LocationManager")
+                                && nameOfMethod.equalsIgnoreCase("requestLocationUpdates"))) {
                             foundElements.add(expression);
+                        }
                     }
-
                 } catch (Exception e){
-                    System.out.println(e);
+                    System.out.println(expression.getText() + " doesnt have class/method name assigned");
                 }
             }
         };
 
 
+    }
+
+    @Override
+    public boolean isAlreadyRefactored(PsiElement element){
+        if (Utilities.findMethodReferenceInChildren(element, "energyRefactorings.ContextAwareLocationManager", "getContextAwareProvider") != null){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override

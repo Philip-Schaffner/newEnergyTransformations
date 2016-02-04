@@ -10,8 +10,10 @@ import java.util.ArrayList;
  */
 public abstract class Refactoring {
 
-    public HashSet<PsiElement> foundElements;
-    public HashSet<PsiElement> elementsToRefactor;
+    protected HashSet<PsiElement> foundElements;
+    protected HashSet<PsiElement> elementsToRefactor;
+
+    protected int noOfElementsScanned;
 
     public HashSet<PsiElement> getElementsToRefactor() {
         return elementsToRefactor;
@@ -21,12 +23,18 @@ public abstract class Refactoring {
         return foundElements;
     }
 
+    public int getNoOfElementsScanned() {
+        return noOfElementsScanned;
+    }
+
     public Refactoring(){
         foundElements = new HashSet<PsiElement>();
         elementsToRefactor = new HashSet<PsiElement>();
+        noOfElementsScanned = 0;
     }
 
     public abstract JavaRecursiveElementVisitor getDetector();
     public abstract void refactor(PsiElement element);
+    public abstract boolean isAlreadyRefactored(PsiElement element);
 
 }

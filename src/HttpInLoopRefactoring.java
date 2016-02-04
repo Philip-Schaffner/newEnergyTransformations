@@ -20,6 +20,7 @@ public class HttpInLoopRefactoring extends Refactoring {
 
             @Override
             public void visitAnnotation(PsiAnnotation annotation) {
+                noOfElementsScanned++;
                 if (annotation.getNameReferenceElement().getText().equalsIgnoreCase("POST")) {
                     PsiElement annotatedElement = annotation.getParent().getParent();
                     if (annotatedElement instanceof PsiMethod) {
@@ -32,6 +33,7 @@ public class HttpInLoopRefactoring extends Refactoring {
 
             @Override
             public void visitMethodCallExpression(PsiMethodCallExpression expression) {
+                noOfElementsScanned++;
                 try {
                     PsiClass classOfExpression = expression.resolveMethod().getContainingClass();
                     String nameOfMethod = expression.resolveMethod().getName();
@@ -58,7 +60,10 @@ public class HttpInLoopRefactoring extends Refactoring {
 
     }
 
-
+    @Override
+    public boolean isAlreadyRefactored(PsiElement element){
+        return false;
+    }
 
     @Override
     public void refactor(PsiElement element) {
@@ -131,9 +136,7 @@ public class HttpInLoopRefactoring extends Refactoring {
         String statementText = "if (condition) {methodcall}";
         String statementText2 = ";";
         PsiElement statementElement = elementFactory.createStatementFromText(statementText, null);
-        PsiElement statementElement2 = elementFactory.createStatementFromText(statementText2, null);
         PsiElement conditionElement = elementFactory.createExpressionFromText(conditionText,element);
-        PsiElement originalCall = elementFactory.createExpressionFromText(element.getText(),element);
         statementElement.getChildren()[3].replace(conditionElement);
         statementElement.getChildren()[6].getChildren()[0].getChildren()[1].replace(element.getParent());
         WriteCommandAction.runWriteCommandAction(element.getProject(), new Runnable() {

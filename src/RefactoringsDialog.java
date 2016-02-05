@@ -13,8 +13,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import CheckBoxList.*;
 import com.intellij.ui.components.JBScrollPane;
@@ -27,61 +28,88 @@ public class RefactoringsDialog {
     private JPanel controlPanel;
     private JPanel buttonPanel;
     private JFrame frame;
-    private CheckboxListItem[] listItems;
-    private Refactoring refactoring;
+    private ArrayList<Refactoring> allRefactorings;
     private MainController callbackController;
+    private HashMap<Refactoring,CheckboxListItem[]> refactoringWithSelectedItems;
 
-    public RefactoringsDialog(Refactoring refactoring, MainController callbackController){
+    public RefactoringsDialog(ArrayList<Refactoring> refactorings, MainController callbackController){
         this.callbackController = callbackController;
-        this.refactoring = refactoring;
-        frame = new JFrame(refactoring.name);
+        this.allRefactorings = refactorings;
+        frame = new JFrame("Energy Refactorings");
         controlPanel = new JPanel();
         buttonPanel = new JPanel();
+        controlPanel.setLayout(new BoxLayout(controlPanel,BoxLayout.PAGE_AXIS));
+        refactoringWithSelectedItems = new HashMap<Refactoring,CheckboxListItem[]>();
     }
 
     public void showDialog(){
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        int numberOfElementsFound = 0;
 
-        // Create a list containing CheckboxListItem's
-        ArrayList<String> codeLines = getCodeLines();
-        listItems = new CheckboxListItem[codeLines.size()];
-        int index = 0;
-        for (String line : codeLines){
-            listItems[index] = new CheckboxListItem(line);
-            index++;
-        }
+        for (Refactoring refactoring : allRefactorings) {
+            if(refactoring.getFoundElements().size() > 0) {
+                numberOfElementsFound += refactoring.getFoundElements().size();
+                JPanel listPanel = new JPanel();
+                JLabel listName = new JBLabel(refactoring.getName());
+                Font font = listName.getFont();
+                // same font but bold
+                Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
+                listName.setFont(boldFont);
+                //Number of elements the ELementVisitor searched
+                JLabel elementsScanned = new JBLabel("Number of elements scanned: " + Integer.toString(refactoring.getNoOfElementsScanned()));
 
-        JBList list = new JBList(listItems);
-        // Use a CheckboxListRenderer (see below)
-        // to renderer list cells
-        list.setCellRenderer(new CheckBoxListRenderer());
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                listPanel.setLayout(new BorderLayout());
+                listPanel.add(listName, BorderLayout.PAGE_START);
+                listPanel.add(elementsScanned, BorderLayout.PAGE_END);
+
+                // Create a list containing CheckboxListItem's
+                ArrayList<String> codeLines = getCodeLines(refactoring);
+                CheckboxListItem[] listItems = new CheckboxListItem[codeLines.size()];
+                int index = 0;
+                for (String line : codeLines) {
+                    listItems[index] = new CheckboxListItem(line);
+                    index++;
+                }
+
+                JBList list = new JBList(listItems);
+                // Use a CheckboxListRenderer (see below)
+                // to renderer list cells
+                list.setCellRenderer(new CheckBoxListRenderer());
+                list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
 //        ArrayList<String> classNames = getClassNames();
 //        JBList listReferences = new JBList(classNames);
 
-        // Add a mouse listener to handle changing selection
+                // Add a mouse listener to handle changing selection
 
-        list.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent event) {
-                JList<CheckboxListItem> list =
-                        (JList<CheckboxListItem>) event.getSource();
+                list.addMouseListener(new MouseAdapter() {
+                    public void mouseClicked(MouseEvent event) {
+                        JList<CheckboxListItem> list =
+                                (JList<CheckboxListItem>) event.getSource();
 
-                // Get index of item clicked
+                        // Get index of item clicked
 
-                int index = list.locationToIndex(event.getPoint());
-                CheckboxListItem item = (CheckboxListItem) list.getModel()
-                        .getElementAt(index);
+                        int index = list.locationToIndex(event.getPoint());
+                        CheckboxListItem item = (CheckboxListItem) list.getModel()
+                                .getElementAt(index);
 
-                // Toggle selected state
+                        // Toggle selected state
 
-                item.setSelected(!item.isSelected());
+                        item.setSelected(!item.isSelected());
 
-                // Repaint cell
+                        // Repaint cell
 
-                list.repaint(list.getCellBounds(index, index));
+                        list.repaint(list.getCellBounds(index, index));
+                    }
+                });
+                listPanel.add(new JBScrollPane(list), BorderLayout.LINE_START);
+                controlPanel.add(listPanel);
+                JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+                separator.setMaximumSize( new Dimension(Integer.MAX_VALUE, 1) );
+                controlPanel.add(separator);
+                refactoringWithSelectedItems.put(refactoring, listItems);
             }
-        });
+        }
 
         JButton okButton = new JButton("Perform Refactorings");
         okButton.addActionListener(new ActionListener() {
@@ -97,26 +125,20 @@ public class RefactoringsDialog {
             }
         });
 
-        //Number of elements the ELementVisitor searched
-        JLabel elementsScanned = new JBLabel("Number of elements scanned: " + Integer.toString(refactoring.getNoOfElementsScanned()));
 
-        controlPanel.setLayout(new BorderLayout());
 
         frame.add(controlPanel);
-        controlPanel.add(buttonPanel, BorderLayout.PAGE_END);
-
-        controlPanel.add(new JBScrollPane(list),BorderLayout.LINE_START);
+        controlPanel.add(buttonPanel);
 //        controlPanel.add(new JBScrollPane(listReferences),BorderLayout.LINE_END);
         buttonPanel.add(cancelButton, BorderLayout.WEST);
         buttonPanel.add(okButton, BorderLayout.EAST);
-        buttonPanel.add(elementsScanned, BorderLayout.PAGE_END);
-        if (list.getItemsCount() > 0) {
+        if (numberOfElementsFound > 0) {
             frame.pack();
             frame.setVisible(true);
         }
     }
 
-    private ArrayList<String> getClassNames() {
+    private ArrayList<String> getClassNames(Refactoring refactoring) {
         Iterator<PsiElement> iterator = refactoring.getFoundElements().iterator();
         ArrayList<String> classNames = new ArrayList<String>();
         while (iterator.hasNext()) {
@@ -131,7 +153,7 @@ public class RefactoringsDialog {
         return classNames;
     }
 
-    public ArrayList<String> getCodeLines(){
+    public ArrayList<String> getCodeLines(Refactoring refactoring){
 
         Iterator<PsiElement> iterator = refactoring.getFoundElements().iterator();
         ArrayList<String> codeLines = new ArrayList<String>();
@@ -150,17 +172,20 @@ public class RefactoringsDialog {
     }
 
     private void continueWithRefactoring(){
-        boolean[] elementsSelected = new boolean[listItems.length];
-        int index = 0;
-        for (CheckboxListItem item : listItems) {
-            if(item.isSelected()){
-                elementsSelected[index] = true;
-            } else {
-                elementsSelected[index] = false;
+        for (Refactoring refactoring : refactoringWithSelectedItems.keySet()) {
+            CheckboxListItem[] listItems = refactoringWithSelectedItems.get(refactoring);
+            boolean[] elementsSelected = new boolean[listItems.length];
+            int index = 0;
+            for (CheckboxListItem item : listItems) {
+                if (item.isSelected()) {
+                    elementsSelected[index] = true;
+                } else {
+                    elementsSelected[index] = false;
+                }
+                index++;
             }
-            index++;
+            frame.dispose();
+            callbackController.performRefactorings(refactoring, elementsSelected);
         }
-        frame.dispose();
-        callbackController.performRefactorings(refactoring,elementsSelected);
     }
 }

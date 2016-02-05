@@ -29,6 +29,10 @@ public abstract class Refactoring {
         return noOfElementsScanned;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public Refactoring(){
         foundElements = new HashSet<PsiElement>();
         elementsToRefactor = new HashSet<PsiElement>();

@@ -33,9 +33,9 @@ public class MainController extends AnAction{
             for (VirtualFile file : allJavaFilesInProject){
                 PsiManager.getInstance(project).findFile(file).accept(detector);
             }
-            RefactoringsDialog dialog = new RefactoringsDialog(refactoring,this);
-            dialog.showDialog();
         }
+        RefactoringsDialog dialog = new RefactoringsDialog(allRefactorings,this);
+        dialog.showDialog();
     }
 
     public void performRefactorings(Refactoring refactoring, boolean[] selecteElements){

@@ -32,10 +32,17 @@ public class ContextAwareLocationManager {
         try {
             IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent batteryStatus = getApplicationUsingReflection().registerReceiver(null, ifilter);
-            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            float batteryPct = level / (float) scale;
-            return (int) batteryPct;
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL;
+            if (isCharging) {
+                return 100;
+            } else {
+                int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                float batteryPct = level / (float) scale;
+                return (int) batteryPct;
+            }
         } catch (Exception e) {
             System.out.println(e);
             return 100;
@@ -45,7 +52,7 @@ public class ContextAwareLocationManager {
     public static Criteria getContextAwareCriteria(){
         int batteryPercentage = getBatteryPercentage();
         Criteria c = new Criteria();
-        if (batteryPercentage < 20) {
+        if (batteryPercentage < 20 || getPowerSaveStatus()) {
             c.setAccuracy(Criteria.ACCURACY_COARSE);
             c.setPowerRequirement(Criteria.POWER_LOW);
         } else if (batteryPercentage < 50){
@@ -60,10 +67,21 @@ public class ContextAwareLocationManager {
 
     public static String getContextAwareProvider(){
         int batteryPercentage = getBatteryPercentage();
-        if (batteryPercentage < 50) {
+        if (batteryPercentage < 50 || getPowerSaveStatus()) {
             return LocationManager.NETWORK_PROVIDER;
         } else {
             return LocationManager.GPS_PROVIDER;
         }
+    }
+
+    public static boolean getPowerSaveStatus(){
+        try {
+            Context context = getApplicationUsingReflection().getApplicationContext();
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            return pm.isPowerSaveMode();
+        } catch (Exception e){
+            System.out.println(e);
+        }
+        return false;
     }
 }

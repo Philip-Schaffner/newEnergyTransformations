@@ -43,6 +43,8 @@ public class DependencyCreator {
                         newClassFile.add(factory.createImportStatement(facade.findClass("java.util.HashMap", globalSearchScope)));
                         newClassFile.add(factory.createImportStatement(facade.findClass("android.location.Criteria", globalSearchScope)));
                         newClassFile.add(factory.createImportStatement(facade.findClass("android.location.LocationManager", globalSearchScope)));
+                        newClassFile.add(factory.createImportStatement(facade.findClass("android.os.PowerManager", globalSearchScope)));
+                        newClassFile.add(factory.createImportStatement(facade.findClass("android.content.Context", globalSearchScope)));
                         PsiClass nameTokensClass = factory.createClassFromText(classText.toString(), null).getInnerClasses()[0];
                         newClassFile.add(nameTokensClass);
                     }

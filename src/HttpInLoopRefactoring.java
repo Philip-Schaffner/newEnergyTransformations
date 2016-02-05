@@ -135,7 +135,6 @@ public class HttpInLoopRefactoring extends Refactoring {
         PsiElementFactory elementFactory = PsiElementFactory.SERVICE.getInstance(element.getProject());
         String conditionText = "SleepTimeCalculator.getInstance().canIRunAgain(" + element.hashCode() + ")";
         String statementText = "if (condition) {methodcall}";
-        String statementText2 = ";";
         PsiElement statementElement = elementFactory.createStatementFromText(statementText, null);
         PsiElement conditionElement = elementFactory.createExpressionFromText(conditionText,element);
         statementElement.getChildren()[3].replace(conditionElement);

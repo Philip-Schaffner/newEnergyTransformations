@@ -63,6 +63,9 @@ public class HttpInLoopRefactoring extends Refactoring {
 
     @Override
     public boolean isAlreadyRefactored(PsiElement element){
+         if(Utilities.findMethodReferenceInChildren(element.getParent().getParent().getParent().getParent().getParent(),"energyRefactorings.SleepTimeCalculator","canIRunAgain") != null){
+             return true;
+         }
         return false;
     }
 

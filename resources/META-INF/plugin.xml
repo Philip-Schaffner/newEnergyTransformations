@@ -30,7 +30,7 @@
 
   <actions>
     <!-- Add your actions here -->
-    <action id="energyRefactorings" class="MainController" text="Run energy refactorings" description="All available energy refactorings">
+    <action id="energyRefactorings" class="Refactoring.MainController" text="Run energy refactorings" description="All available energy refactorings">
       <add-to-group group-id="ToolsMenu" anchor="first"/>
     </action>
   </actions>

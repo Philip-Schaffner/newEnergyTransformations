@@ -25,7 +25,7 @@ public class BatteryUtils {
             int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
             int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            float batteryPct = level / (float) scale;
+            float batteryPct = (level / (float) scale)*100;
             return (int) batteryPct;
         } catch (Exception e) {
             System.out.println(e);

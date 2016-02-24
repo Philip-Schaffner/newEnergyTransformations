@@ -50,20 +50,26 @@ public class RefactoringsDialog {
                 int numberOfElementsToRefactor = 0;
 
                 for (Refactoring refactoring : allRefactorings) {
+
+                    JPanel listPanel = new JPanel();
+                    JLabel listName = new JBLabel(refactoring.getName());
+                    Font font = listName.getFont();
+                    // same font but bold
+                    Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
+                    listName.setFont(boldFont);
+                    JLabel elementsScanned = new JBLabel("Number of elements scanned: " + Integer.toString(refactoring.getNoOfElementsScanned()));
+                    listPanel.setLayout(new BorderLayout());
+                    listPanel.add(listName, BorderLayout.PAGE_START);
+                    listPanel.add(elementsScanned, BorderLayout.PAGE_END);
+                    controlPanel.add(listPanel);
+
+                    JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+                    separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+                    controlPanel.add(separator);
+
                     if (refactoring.getRefactoringCandidates().size() > 0) {
                         numberOfElementsToRefactor = refactoring.getRefactoringCandidates().size();
-                        JPanel listPanel = new JPanel();
-                        JLabel listName = new JBLabel(refactoring.getName());
-                        Font font = listName.getFont();
-                        // same font but bold
-                        Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
-                        listName.setFont(boldFont);
                         //Number of elements the ELementVisitor searched
-                        JLabel elementsScanned = new JBLabel("Number of elements scanned: " + Integer.toString(refactoring.getNoOfElementsScanned()));
-
-                        listPanel.setLayout(new BorderLayout());
-                        listPanel.add(listName, BorderLayout.PAGE_START);
-                        listPanel.add(elementsScanned, BorderLayout.PAGE_END);
                         int index = 0;
 
                         RefactoringsTableModel model = new RefactoringsTableModel(frame);
@@ -82,12 +88,14 @@ public class RefactoringsDialog {
                         table.doLayout();
 
                         listPanel.add(new JBScrollPane(table), BorderLayout.LINE_START);
-                        controlPanel.add(listPanel);
-                        JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
-                        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-                        controlPanel.add(separator);
+                    } else {
+                        JLabel nothingFound = new JBLabel("Analysis of the code returned no hits for the searched patterns");
+                        listPanel.add(nothingFound);
                     }
                 }
+
+                JLabel runTimeOfAnalysis = new JBLabel("Runtime of analysis in seconds: " + Double.toString(callbackController.getRuntimeLastAnalysis()));
+                controlPanel.add(runTimeOfAnalysis);
 
                 JButton okButton = new JButton("Preview Changes");
                 okButton.addActionListener(new ActionListener() {
@@ -109,10 +117,8 @@ public class RefactoringsDialog {
                 //        controlPanel.add(new JBScrollPane(listReferences),BorderLayout.LINE_END);
                 buttonPanel.add(cancelButton, BorderLayout.WEST);
                 buttonPanel.add(okButton, BorderLayout.EAST);
-                if (numberOfElementsToRefactor > 0) {
-                    frame.pack();
-                    frame.setVisible(true);
-                }
+                frame.pack();
+                frame.setVisible(true);
             }
         });
     }

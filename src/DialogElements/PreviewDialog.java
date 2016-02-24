@@ -24,8 +24,9 @@ public class PreviewDialog {
         this.allRefactorings = refactorings;
         frame = new JFrame("Energy Refactorings");
         controlPanel = new JPanel();
-        controlPanel.setLayout(new BoxLayout(controlPanel,BoxLayout.PAGE_AXIS));
+        controlPanel.setLayout(new GridBagLayout());
         buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BorderLayout());
     }
 
     public void showDialog(){
@@ -39,16 +40,27 @@ public class PreviewDialog {
                 }
                 frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-                int numberOfElementsToPreview = 0;
+                int numberOfElementsInGrid = 0;
 
                 for (Refactoring refactoring : allRefactorings) {
                     for (RefactoringCandidate candidate : refactoring.getRefactoringCandidates()){
                         if (candidate.isSelected()){
-                            controlPanel.add(new JLabel("<html>" + candidate.getFileName() + ", line " + candidate.getCodeLineNumber() + ": " + refactoring.getEffectText(candidate) + "</html>"));
+                            GridBagConstraints c = new GridBagConstraints();
+                            c.gridx = 0;
+                            c.gridy = numberOfElementsInGrid;
+                            controlPanel.add(new JLabel(candidate.getFileName() + ", line " + candidate.getCodeLineNumber() + ": "), c);
+                            c.gridx = 1;
+                            controlPanel.add(new JLabel("<html>" + refactoring.getEffectText(candidate) + "</html>"),c);
+                            numberOfElementsInGrid++;
+                            c.gridx = 0;
+                            c.gridy = numberOfElementsInGrid;
                             JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
                             separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-                            controlPanel.add(separator);
-                            numberOfElementsToPreview++;
+                            c.fill = GridBagConstraints.HORIZONTAL;
+                            c.weightx = 1;
+                            c.gridwidth = GridBagConstraints.REMAINDER;
+                            controlPanel.add(separator,c);
+                            numberOfElementsInGrid++;
                         }
                     }
                 }
@@ -68,11 +80,14 @@ public class PreviewDialog {
                 });
 
                 frame.add(controlPanel);
-                controlPanel.add(buttonPanel);
+                GridBagConstraints c = new GridBagConstraints();
+                c.gridx = 0;
+                c.gridy = numberOfElementsInGrid;
+                controlPanel.add(buttonPanel, c);
                 //        controlPanel.add(new JBScrollPane(listReferences),BorderLayout.LINE_END);
                 buttonPanel.add(cancelButton, BorderLayout.WEST);
                 buttonPanel.add(okButton, BorderLayout.EAST);
-                if (numberOfElementsToPreview > 0) {
+                if (numberOfElementsInGrid > 0) {
                     frame.pack();
                     frame.setVisible(true);
                 }

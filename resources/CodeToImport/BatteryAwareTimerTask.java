@@ -1,36 +1,41 @@
 package energyRefactorings;
 
+import android.util.Log;
 import java.util.TimerTask;
 
 /**
  * Created by pip on 07.02.2016.
  */
-public abstract class BatteryAwareTimerTask extends TimerTask{
+public abstract class BatteryAwareTimerTask extends TimerTask {
 
-    energyRefactorings.BatteryAwarenessCriteria criteria;
+    final double MAX_SLEEP_FACTOR = 10; //time between updates in ms. currently set to 10x
+    final double BATTERY_LOW = 25;
+    final double BATTERY_MED = 50;
+    final double BATTERY_HIGH = 75;
+    final double LOWEST_UPDATE_TIME = 3600000; //lower boundary for recheck time. currently set to 1h
+    final long defaultWaitTime;
+
+    BatteryAwarenessCriteria criteria;
     long lastRunTimestamp;
 
-    public BatteryAwareTimerTask(energyRefactorings.BatteryAwarenessCriteria criteria){
+    public BatteryAwareTimerTask(BatteryAwarenessCriteria criteria, long defaultWaitTime) {
         super();
         this.criteria = criteria;
+        this.defaultWaitTime = defaultWaitTime;
     }
 
     @Override
     public void run() {
-        if(checkIfBatteryPermits()){
-            runIfBatteryPermits();
-            lastRunTimestamp = System.currentTimeMillis();
-        }
+        runIfBatteryPermits();
+        lastRunTimestamp = System.currentTimeMillis();
     }
 
     public abstract void runIfBatteryPermits();
 
-    public boolean checkIfBatteryPermits(){
-        if (energyRefactorings.BatteryUtils.getPowerSaveStatus() && criteria.getSuspendIfInBatterySafeMode()){
+    public boolean checkIfBatteryPermits() {
+        if (energyRefactorings.BatteryUtils.getPowerSaveStatus() && criteria.getSuspendIfInBatterySafeMode()) {
             return false;
-        } else if (!checkTimePassed()) {
-            return false;
-        } else if ((Integer)energyRefactorings.BatteryUtils.getBatteryPercentage() < criteria.getSuspendThreshold()){
+        } else if ((Integer) energyRefactorings.BatteryUtils.getBatteryPercentage() < criteria.getSuspendThreshold()) {
             return false;
         } else {
             return true;
@@ -38,24 +43,38 @@ public abstract class BatteryAwareTimerTask extends TimerTask{
     }
 
     private boolean checkTimePassed() {
-        if (System.currentTimeMillis() - lastRunTimestamp > getSleepTimer()) {
+        if (lastRunTimestamp == 0 || System.currentTimeMillis() - lastRunTimestamp > getSleepTimer()) {
             return true;
         } else {
             return false;
         }
     }
 
-    public double getSleepTimer() {
-        Double result = (double) 0;
-        result = Math.pow(20 * (((100 - (energyRefactorings.BatteryUtils.getBatteryPercentage())) / 100)), 4) + 1;
-        switch (criteria.getPowerSafeScheme()){
-            case POWER_SAFE_LOW:
-                return result;
-            case POWER_SAFE_MEDIUM:
-                return 2*result;
-            case POWER_SAFE_HIGH:
-                return 3*result;
+    public long getSleepTimer() {
+        Double result = (double) 1;
+        int batteryPercentage = energyRefactorings.BatteryUtils.getBatteryPercentage();
+        if (!checkIfBatteryPermits()){
+            result = LOWEST_UPDATE_TIME / (double) defaultWaitTime;
+        } else {
+            switch (criteria.getPowerSafeScheme()) {
+                case POWER_SAFE_LOW:
+                    if (BATTERY_LOW - batteryPercentage > 0) {
+                        result = (BATTERY_LOW - batteryPercentage) / ((double) BATTERY_LOW / MAX_SLEEP_FACTOR);
+                    }
+                    break;
+                case POWER_SAFE_MEDIUM:
+                    if (BATTERY_MED - batteryPercentage > 0) {
+                        result = (BATTERY_MED - batteryPercentage) / ((double) BATTERY_MED / MAX_SLEEP_FACTOR);
+                    }
+                    break;
+                case POWER_SAFE_HIGH:
+                    if (BATTERY_HIGH - batteryPercentage > 0) {
+                        result = (BATTERY_HIGH - batteryPercentage) / ((double) BATTERY_HIGH / MAX_SLEEP_FACTOR);
+                    }
+                    break;
+            }
         }
-        return 0;
+        Log.d("getSleepTimeFactor", result.toString());
+        return result.longValue();
     }
 }

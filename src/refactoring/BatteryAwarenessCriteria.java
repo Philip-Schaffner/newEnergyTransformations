@@ -1,4 +1,4 @@
-package DialogElements;
+package Refactoring;
 
 /**
  * Created by pip on 07.02.2016.
@@ -40,7 +40,7 @@ public class BatteryAwarenessCriteria {
     }
 
     public BatteryAwarenessCriteria(){
-        this.powerSafeScheme = PowerSaveScheme.POWER_SAFE_MEDIUM;
+        this.powerSafeScheme = PowerSaveScheme.POWER_SAFE_LOW;
         this.suspendIfInBatterySafeMode = false;
         this.suspendThreshold = 0;
     }

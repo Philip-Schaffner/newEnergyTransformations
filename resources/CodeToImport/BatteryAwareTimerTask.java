@@ -59,17 +59,17 @@ public abstract class BatteryAwareTimerTask extends TimerTask {
             switch (criteria.getPowerSafeScheme()) {
                 case POWER_SAFE_LOW:
                     if (BATTERY_LOW - batteryPercentage > 0) {
-                        result = (BATTERY_LOW - batteryPercentage) / ((double) BATTERY_LOW / MAX_SLEEP_FACTOR);
+                        result = (BATTERY_LOW - batteryPercentage) / ((double) BATTERY_LOW / MAX_SLEEP_FACTOR) + 1;
                     }
                     break;
                 case POWER_SAFE_MEDIUM:
                     if (BATTERY_MED - batteryPercentage > 0) {
-                        result = (BATTERY_MED - batteryPercentage) / ((double) BATTERY_MED / MAX_SLEEP_FACTOR);
+                        result = (BATTERY_MED - batteryPercentage) / ((double) BATTERY_MED / MAX_SLEEP_FACTOR) + 1;
                     }
                     break;
                 case POWER_SAFE_HIGH:
                     if (BATTERY_HIGH - batteryPercentage > 0) {
-                        result = (BATTERY_HIGH - batteryPercentage) / ((double) BATTERY_HIGH / MAX_SLEEP_FACTOR);
+                        result = (BATTERY_HIGH - batteryPercentage) / ((double) BATTERY_HIGH / MAX_SLEEP_FACTOR) + 1;
                     }
                     break;
             }

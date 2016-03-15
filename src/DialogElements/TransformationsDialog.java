@@ -20,17 +20,17 @@ import Refactoring.*;
 /**
  * Created by pip on 03.02.2016.
  */
-public class RefactoringsDialog {
+public class TransformationsDialog {
 
     private JFrame frame;
-    private ArrayList<Refactoring> allRefactorings;
+    private ArrayList<Transformation> allTransformations;
     private MainController callbackController;
     private JPanel controlPanel;
     private JPanel buttonPanel;
 
-    public RefactoringsDialog(ArrayList<Refactoring> refactorings, MainController callbackController){
+    public TransformationsDialog(ArrayList<Transformation> transformations, MainController callbackController){
         this.callbackController = callbackController;
-        this.allRefactorings = refactorings;
+        this.allTransformations = transformations;
         frame = new JFrame("Energy Refactorings");
         controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel,BoxLayout.PAGE_AXIS));
@@ -49,15 +49,15 @@ public class RefactoringsDialog {
                 frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 int numberOfElementsToRefactor = 0;
 
-                for (Refactoring refactoring : allRefactorings) {
+                for (Transformation transformation : allTransformations) {
 
                     JPanel listPanel = new JPanel();
-                    JLabel listName = new JBLabel(refactoring.getName());
+                    JLabel listName = new JBLabel(transformation.getName());
                     Font font = listName.getFont();
                     // same font but bold
                     Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
                     listName.setFont(boldFont);
-                    JLabel elementsScanned = new JBLabel("Number of elements scanned: " + Integer.toString(refactoring.getNoOfElementsScanned()));
+                    JLabel elementsScanned = new JBLabel("Number of elements scanned: " + Integer.toString(transformation.getNoOfElementsScanned()));
                     listPanel.setLayout(new BorderLayout());
                     listPanel.add(listName, BorderLayout.PAGE_START);
                     listPanel.add(elementsScanned, BorderLayout.PAGE_END);
@@ -67,14 +67,14 @@ public class RefactoringsDialog {
                     separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
                     controlPanel.add(separator);
 
-                    if (refactoring.getRefactoringCandidates().size() > 0) {
-                        numberOfElementsToRefactor = refactoring.getRefactoringCandidates().size();
+                    if (transformation.getTransformationCandidates().size() > 0) {
+                        numberOfElementsToRefactor = transformation.getTransformationCandidates().size();
                         //Number of elements the ELementVisitor searched
                         int index = 0;
 
-                        RefactoringsTableModel model = new RefactoringsTableModel(frame);
+                        TransformationsTableModel model = new TransformationsTableModel(frame);
 
-                        for (RefactoringCandidate candidate : refactoring.getRefactoringCandidates()) {
+                        for (TransformationCandidate candidate : transformation.getTransformationCandidates()) {
                             model.addCandidate(candidate);
                         }
 
@@ -123,8 +123,8 @@ public class RefactoringsDialog {
         });
     }
 
-    private ArrayList<String> getClassNames(Refactoring refactoring) {
-        Iterator<RefactoringCandidate> iterator = refactoring.getRefactoringCandidates().iterator();
+    private ArrayList<String> getClassNames(Transformation transformation) {
+        Iterator<TransformationCandidate> iterator = transformation.getTransformationCandidates().iterator();
         ArrayList<String> classNames = new ArrayList<String>();
         while (iterator.hasNext()) {
             PsiElement element = iterator.next().getElement();

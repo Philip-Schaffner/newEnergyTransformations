@@ -1,7 +1,7 @@
 package DialogElements;
 
 import Refactoring.BatteryAwarenessCriteria;
-import Refactoring.RefactoringCandidate;
+import Refactoring.TransformationCandidate;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -11,21 +11,21 @@ import java.util.Vector;
 /**
  * Created by pip on 09.02.2016.
  */
-public class RefactoringsTableModel extends DefaultTableModel {
+public class TransformationsTableModel extends DefaultTableModel {
 
 
     JFrame frame;
-    ArrayList<RefactoringCandidate> refactoringCandidates;
+    ArrayList<TransformationCandidate> transformationCandidates;
 
-    public RefactoringsTableModel(JFrame frame){
+    public TransformationsTableModel(JFrame frame){
         super(new String[]{"Refactor", "Class", "Line", "Code", "Customization"}, 0);
         this.frame = frame;
-        this.refactoringCandidates = new ArrayList<>();
+        this.transformationCandidates = new ArrayList<>();
     }
 
-    public void addCandidate(RefactoringCandidate candidate){
+    public void addCandidate(TransformationCandidate candidate){
         this.addRow(new Object[]{candidate.isSelected(),candidate.getFileName(),candidate.getCodeLineNumber(),candidate.getCodeLineText(),candidate.getBatteryAwarenessCriteria()});
-        refactoringCandidates.add(candidate);
+        transformationCandidates.add(candidate);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class RefactoringsTableModel extends DefaultTableModel {
             Vector rowData = (Vector)getDataVector().get(row);
             rowData.set(0, (boolean)aValue);
             fireTableCellUpdated(row, column);
-            refactoringCandidates.get(row).setSelected((Boolean)aValue);
+            transformationCandidates.get(row).setSelected((Boolean)aValue);
             if ((Boolean)aValue){
                 CustomizationDialog customizationDialog = new CustomizationDialog(frame, (BatteryAwarenessCriteria)rowData.get(4));
                 customizationDialog.setVisible(true);

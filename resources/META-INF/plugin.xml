@@ -1,8 +1,8 @@
 <idea-plugin version="2">
-  <id>ch.uzh.ifi.energyAwareRefactorings</id>
-  <name>EnergyAwareRefactorings</name>
+  <id>ch.uzh.ifi.batteryAwareTransformations</id>
+  <name>BatteryAwareTransformations</name>
   <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">UZH</vendor>
+  <vendor email="philip.schaffner@uzh.ch" url="http://www.yourcompany.com">UZH</vendor>
 
   <description><![CDATA[
       Enter short description for your plugin here.<br>
@@ -30,7 +30,7 @@
 
   <actions>
     <!-- Add your actions here -->
-    <action id="energyRefactorings" class="Refactoring.MainController" text="Run energy refactorings" description="All available energy refactorings">
+    <action id="energyTransformations" class="Transformation.MainController" text="Run energy transformations" description="All available energy transformations">
       <add-to-group group-id="ToolsMenu" anchor="first"/>
     </action>
   </actions>

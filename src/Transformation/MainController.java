@@ -43,7 +43,7 @@ public class MainController extends AnAction{
         showCustomizationDialog();
     }
 
-    public void previewRefactorings(){
+    public void previewTransformations(){
         PreviewDialog previewDialog = new PreviewDialog(allTransformations, this);
         previewDialog.showDialog();
     }
@@ -53,12 +53,12 @@ public class MainController extends AnAction{
         dialog.showDialog();
     }
 
-    public void performRefactorings(){
+    public void performTransformations(){
         int index = 0;
         for (Transformation transformation : allTransformations) {
             for (TransformationCandidate candidate : transformation.transformationCandidates) {
-                if (candidate.isSelected() && MAKE_CHANGES && !transformation.isAlreadyRefactored(candidate.getElement())) {
-                    transformation.refactor(candidate);
+                if (candidate.isSelected() && MAKE_CHANGES && !transformation.isAlreadyTransformed(candidate.getElement())) {
+                    transformation.transform(candidate);
 //                ((ProjectManagerImpl) ProjectManager.getInstance()).reloadProject(element.getProject());
                 }
                 index++;

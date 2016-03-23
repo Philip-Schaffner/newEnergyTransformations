@@ -1,7 +1,7 @@
 package DialogElements;
 
-import Refactoring.BatteryAwarenessCriteria;
-import Refactoring.TransformationCandidate;
+import Transformation.BatteryAwarenessCriteria;
+import Transformation.TransformationCandidate;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -18,7 +18,7 @@ public class TransformationsTableModel extends DefaultTableModel {
     ArrayList<TransformationCandidate> transformationCandidates;
 
     public TransformationsTableModel(JFrame frame){
-        super(new String[]{"Refactor", "Class", "Line", "Code", "Customization"}, 0);
+        super(new String[]{"Transform", "Class", "Line", "Code", "Customization"}, 0);
         this.frame = frame;
         this.transformationCandidates = new ArrayList<>();
     }

@@ -1,4 +1,4 @@
-package energyRefactorings;
+package energyTransformations;
 
 import android.util.Log;
 import java.util.TimerTask;
@@ -33,9 +33,9 @@ public abstract class BatteryAwareTimerTask extends TimerTask {
     public abstract void runIfBatteryPermits();
 
     public boolean checkIfBatteryPermits() {
-        if (energyRefactorings.BatteryUtils.getPowerSaveStatus() && criteria.getSuspendIfInBatterySafeMode()) {
+        if (energyTransformations.BatteryUtils.getPowerSaveStatus() && criteria.getSuspendIfInBatterySafeMode()) {
             return false;
-        } else if ((Integer) energyRefactorings.BatteryUtils.getBatteryPercentage() < criteria.getSuspendThreshold()) {
+        } else if ((Integer) energyTransformations.BatteryUtils.getBatteryPercentage() < criteria.getSuspendThreshold()) {
             return false;
         } else {
             return true;
@@ -52,7 +52,7 @@ public abstract class BatteryAwareTimerTask extends TimerTask {
 
     public long getSleepTimer() {
         Double result = (double) 1;
-        int batteryPercentage = energyRefactorings.BatteryUtils.getBatteryPercentage();
+        int batteryPercentage = energyTransformations.BatteryUtils.getBatteryPercentage();
         if (!checkIfBatteryPermits()){
             result = LOWEST_UPDATE_TIME / (double) defaultWaitTime;
         } else {
@@ -76,5 +76,9 @@ public abstract class BatteryAwareTimerTask extends TimerTask {
         }
         Log.d("getSleepTimeFactor", result.toString());
         return result.longValue();
+    }
+
+    public long getLastRunTimestamp(){
+        return lastRunTimestamp;
     }
 }

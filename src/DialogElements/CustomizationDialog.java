@@ -1,6 +1,6 @@
 package DialogElements;
 
-import Refactoring.BatteryAwarenessCriteria;
+import Transformation.BatteryAwarenessCriteria;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBLabel;
 

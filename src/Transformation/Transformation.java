@@ -41,8 +41,8 @@ public abstract class Transformation {
     }
 
     public abstract JavaRecursiveElementVisitor getDetector();
-    public abstract void refactor(TransformationCandidate candidate);
-    public abstract boolean isAlreadyRefactored(PsiElement element);
+    public abstract void transform(TransformationCandidate candidate);
+    public abstract boolean isAlreadyTransformed(PsiElement element);
     public abstract String getEffectText(TransformationCandidate candidate);
 
 }

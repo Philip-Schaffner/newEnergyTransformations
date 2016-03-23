@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="batteryAwareTransformations">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/batteryAwareTransformations.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

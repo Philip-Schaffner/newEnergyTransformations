@@ -1,6 +1,6 @@
 package DialogElements;
 
-import Refactoring.*;
+import Transformation.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,15 +14,15 @@ import java.util.ArrayList;
 public class PreviewDialog {
 
     private JFrame frame;
-    private ArrayList<Refactoring> allRefactorings;
+    private ArrayList<Transformation> allTransformations;
     private MainController callbackController;
     private JPanel controlPanel;
     private JPanel buttonPanel;
 
-    public PreviewDialog(ArrayList<Refactoring> refactorings, MainController callbackController){
+    public PreviewDialog(ArrayList<Transformation> transformations, MainController callbackController){
         this.callbackController = callbackController;
-        this.allRefactorings = refactorings;
-        frame = new JFrame("Energy Refactorings");
+        this.allTransformations = transformations;
+        frame = new JFrame("Energy Transformations");
         controlPanel = new JPanel();
         controlPanel.setLayout(new GridBagLayout());
         buttonPanel = new JPanel();
@@ -42,15 +42,15 @@ public class PreviewDialog {
 
                 int numberOfElementsInGrid = 0;
 
-                for (Refactoring refactoring : allRefactorings) {
-                    for (RefactoringCandidate candidate : refactoring.getRefactoringCandidates()){
+                for (Transformation transformation : allTransformations) {
+                    for (TransformationCandidate candidate : transformation.getTransformationCandidates()){
                         if (candidate.isSelected()){
                             GridBagConstraints c = new GridBagConstraints();
                             c.gridx = 0;
                             c.gridy = numberOfElementsInGrid;
                             controlPanel.add(new JLabel(candidate.getFileName() + ", line " + candidate.getCodeLineNumber() + ": "), c);
                             c.gridx = 1;
-                            controlPanel.add(new JLabel("<html>" + refactoring.getEffectText(candidate) + "</html>"),c);
+                            controlPanel.add(new JLabel("<html>" + transformation.getEffectText(candidate) + "</html>"),c);
                             numberOfElementsInGrid++;
                             c.gridx = 0;
                             c.gridy = numberOfElementsInGrid;
@@ -65,10 +65,10 @@ public class PreviewDialog {
                     }
                 }
 
-                JButton okButton = new JButton("Perform Refactorings");
+                JButton okButton = new JButton("Perform Transformations");
                 okButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        continueWithRefactoring();
+                        continueWithTransformation();
                     }
                 });
 
@@ -95,9 +95,9 @@ public class PreviewDialog {
         });
     }
 
-    public void continueWithRefactoring(){
+    public void continueWithTransformation(){
         frame.dispose();
-        callbackController.performRefactorings();
+        callbackController.performTransformations();
     }
 
     public void backToCustomization(){

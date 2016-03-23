@@ -1,4 +1,4 @@
-package energyRefactorings;
+package energyTransformations;
 
 import android.app.Application;
 import android.content.Context;

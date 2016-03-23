@@ -15,7 +15,7 @@ import java.util.Iterator;
 
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
-import Refactoring.*;
+import Transformation.*;
 
 /**
  * Created by pip on 03.02.2016.
@@ -31,7 +31,7 @@ public class TransformationsDialog {
     public TransformationsDialog(ArrayList<Transformation> transformations, MainController callbackController){
         this.callbackController = callbackController;
         this.allTransformations = transformations;
-        frame = new JFrame("Energy Refactorings");
+        frame = new JFrame("Energy Transformations");
         controlPanel = new JPanel();
         controlPanel.setLayout(new BoxLayout(controlPanel,BoxLayout.PAGE_AXIS));
         buttonPanel = new JPanel();
@@ -47,7 +47,7 @@ public class TransformationsDialog {
                     ex.printStackTrace();
                 }
                 frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-                int numberOfElementsToRefactor = 0;
+                int numberOfElementsToTransform = 0;
 
                 for (Transformation transformation : allTransformations) {
 
@@ -68,7 +68,7 @@ public class TransformationsDialog {
                     controlPanel.add(separator);
 
                     if (transformation.getTransformationCandidates().size() > 0) {
-                        numberOfElementsToRefactor = transformation.getTransformationCandidates().size();
+                        numberOfElementsToTransform = transformation.getTransformationCandidates().size();
                         //Number of elements the ELementVisitor searched
                         int index = 0;
 
@@ -100,7 +100,7 @@ public class TransformationsDialog {
                 JButton okButton = new JButton("Preview Changes");
                 okButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        continueWithRefactoring();
+                        continueWithTransformation();
                     }
                 });
 
@@ -138,8 +138,8 @@ public class TransformationsDialog {
         return classNames;
     }
 
-    private void continueWithRefactoring(){
+    private void continueWithTransformation(){
         frame.dispose();
-        callbackController.previewRefactorings();
+        callbackController.previewTransformations();
     }
 }

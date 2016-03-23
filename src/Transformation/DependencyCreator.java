@@ -29,10 +29,10 @@ public class DependencyCreator {
                     String classText = getClassText(file);
                     PsiDirectory rootDir = getProjectRoot(element);
                     PsiDirectory newDirectory;
-                    if (rootDir.isDirectory() && ((PsiDirectory) rootDir).findSubdirectory("energyRefactorings") == null) {
-                        newDirectory = ((PsiDirectory) rootDir).createSubdirectory("energyRefactorings");
+                    if (rootDir.isDirectory() && ((PsiDirectory) rootDir).findSubdirectory("energyTransformations") == null) {
+                        newDirectory = ((PsiDirectory) rootDir).createSubdirectory("energyTransformations");
                     }else {
-                        newDirectory = ((PsiDirectory) rootDir).findSubdirectory("energyRefactorings");
+                        newDirectory = ((PsiDirectory) rootDir).findSubdirectory("energyTransformations");
                     }
                     if (newDirectory.findFile(file) == null) {
                         PsiJavaFile newClassFile = (PsiJavaFile) newDirectory.createFile(file);
@@ -40,7 +40,7 @@ public class DependencyCreator {
                         PsiElementFactory factory = facade.getElementFactory();
                         PsiFileFactory fileFactory = PsiFileFactory.getInstance(project);
                         GlobalSearchScope globalSearchScope = GlobalSearchScope.allScope(project);
-                        newClassFile.add(factory.createPackageStatement("energyRefactorings"));
+                        newClassFile.add(factory.createPackageStatement("energyTransformations"));
                         for (String importStatement : getImportStatements(file)) {
                             newClassFile.add(factory.createImportStatement(facade.findClass(importStatement, globalSearchScope)));
                         }
